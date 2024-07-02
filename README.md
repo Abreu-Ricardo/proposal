@@ -1,2 +1,2 @@
 # proposal
-Proposal of solution using eBPF program to redirect and to do zero-copy
+Proposal of a solution using eBPF program to redirect and to do zero-copy
