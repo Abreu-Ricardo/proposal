@@ -23,14 +23,14 @@
  * 0x03
  * 0x01
  * 0x70
- *
- * PC:
- * 0xb4
- * 0x2e
- * 0x99
- * 0xc5
- * 0xc5
- * 0x8c
+ *       1a:6e:75:74:cb:84
+ * vth3:
+ * 0x1a
+ * 0x6e
+ * 0x75
+ * 0x74
+ * 0xcb
+ * 0x84
  *
  * BR:
  * 0x82
@@ -45,10 +45,29 @@
 
 
 
-#define IP_HOST 0x0c0a80014 // IP local host 192.168.0.20
-#define IP_C1   0x0a64000a  // container 1
-#define IP_C2   0x0a640014  // container 2
-#define IP_BR   0x0a640001  // IP bridge
+/****************IP's DO TESTE DE CONTAINERS EM TRIANGULO*****************/
+// IP local da minha maquina em decimal 192.168.0.20 --> 0x0c0a80014 em hexadecimal
+// IP do container1  veth1/192.168.1.1 --> 0x0c0a80101   veth6/192.168.3.6 --> 0x0c0a80306
+// IP do container2  veth2/192.168.1.2 --> 0x0c0a80102   veth3/192.168.2.3 --> 0x0c0a80203
+// IP do container3  veth4/192.168.2.4 --> 0x0c0a80204   veth5/192.168.3.5 --> 0x0c0a80305
+
+#define IP_C1v1   0x0c0a80101   // IP do container1 que veth1 envia 
+#define IP_C1v6   0x0c0a80306   // IP do container1 que veth6 recebe
+#define IP_C2v2   0x0c0a80102   // IP do container2 que veth2 recebe
+#define IP_C2v3   0x0c0a80203   // IP do container2 que veth3 envia
+#define IP_C3v4   0x0c0a80204   // IP do container3 que veth4 recebe
+#define IP_C3v5   0x0c0a80305   // IP do container3 que veth5 envia
+
+
+/****************IP's DO TESTE DE CONTAINERS COM BRIDGE*****************/
+// IP container1 --> 10.100.0.10 --> 0x0a64000a 
+// IP container2 --> 10.100.0.20 --> 0x0a640014 
+// IP container3 --> 10.100.0.30 --> 0x0a64001e 
+#define IP_C1 0x0a64000a
+#define IP_C2 0x0a640014
+#define IP_C3 0x0a64001e
+
+
 
 // MAP
 struct{ 
@@ -80,8 +99,8 @@ static __always_inline unsigned char lookup_protocol(struct xdp_md *ctx){
 		struct iphdr *iph = data + sizeof(struct ethhdr);
 		if(data + sizeof(struct ethhdr) + sizeof(struct iphdr) <= data_end){
 			protocol = iph->protocol;
-			//bpf_printk("--- %x\n", bpf_ntohl(iph->saddr ));
-		}
+			bpf_printk("recebe_kern: saddr:%x daddr:%x\n", bpf_ntohl(iph->saddr), bpf_ntohl(iph->daddr));		
+        }
 	}
 	return protocol;
 }
@@ -102,7 +121,7 @@ static __always_inline int verifica_ip(struct xdp_md *ctx){
 		
 		if(data + sizeof(struct ethhdr) + sizeof(struct iphdr) <= data_end){
 			
-			if ( bpf_ntohl(iph->saddr) == IP_C1 ){
+			if ( bpf_ntohl(iph->saddr) == IP_C2 ){
 				return 0;  // IP destino eh o esperado
 			}
 		}
@@ -125,7 +144,6 @@ static __always_inline void altera_ip(struct xdp_md *ctx){
 		
 		if(data + sizeof(struct ethhdr) + sizeof(struct iphdr) <= data_end){
 			
-			if ( bpf_ntohl(iph->saddr) == IP_C1 ){
 
                 // MAC Container1
     	/*	    
@@ -138,32 +156,32 @@ static __always_inline void altera_ip(struct xdp_md *ctx){
           */      
 
                 // MAC Container2
-                bpf_printk("recebeKern-->h_source: %x %x %x ", eth->h_source[0], eth->h_source[1], eth->h_source[2]);
-                bpf_printk("%x %x %x\n", eth->h_source[3], eth->h_source[4], eth->h_source[5]);
+                //bpf_printk("recebe_kern-->h_source: %x %x %x ", eth->h_source[0], eth->h_source[1], eth->h_source[2]);
+                //bpf_printk("%x %x %x\n", eth->h_source[3], eth->h_source[4], eth->h_source[5]);
                 
-                // MAC SOURCE
-                eth->h_source[0] = 0x26;
-				eth->h_source[1] = 0x4a;
-				eth->h_source[2] = 0x13;
-				eth->h_source[3] = 0x03;
-				eth->h_source[4] = 0x01;
-				eth->h_source[5] = 0x70;
+                // MAC SOURCE       MAC C2      MAC C3
+                //eth->h_source[0] =  /*0x26;*/ 0x1a ;
+				//eth->h_source[1] =  /*0x4a;*/ 0x6e ;
+				//eth->h_source[2] =  /*0x13;*/ 0x75 ;
+				//eth->h_source[3] =  /*0x03;*/ 0x74 ;
+				//eth->h_source[4] =  /*0x01;*/ 0xcb ;
+				//eth->h_source[5] =  /*0x70;*/ 0x84 ;
                 
 
-                // MAC DEST
-                eth->h_dest[0] = 0xd6 ;
-				eth->h_dest[1] = 0xc6 ;
-				eth->h_dest[2] = 0x9f ;
-				eth->h_dest[3] = 0xbc ;
-				eth->h_dest[4] = 0xce ;
-				eth->h_dest[5] = 0x8c ;
+                // MAC DEST veth1 do container1
+                // d6:c6:9f:bc:ce:8c
+                eth->h_dest[0] = 0xd6;
+				eth->h_dest[1] = 0xc6;
+				eth->h_dest[2] = 0x9f;
+				eth->h_dest[3] = 0xbc;
+				eth->h_dest[4] = 0xce;
+				eth->h_dest[5] = 0x8c;
 
-				iph->saddr = bpf_htonl(IP_C2);
+				iph->saddr = bpf_htonl(IP_C3);
                 iph->daddr = bpf_htonl(IP_C1);
 
 				//bpf_printk("recebe_kern: daddr:%x saddr:%x\n", bpf_ntohl(iph->daddr), bpf_ntohl(iph->saddr));
 				return;  // IP destino eh o esperado
-			}
 		}
 	}
 }
@@ -182,30 +200,28 @@ int recebe_pacotes(struct xdp_md *ctx ){
 	//TODO
 	// Redirecionar o pacote para o host para que os programas continuem a funcionar, ping e iperf3
     
-    //TODO
-    // NAO TA DANDO CERTO POR CAUSA DO IPTABLES, OS PACOTES QUE VAO PARA O HOST ESTAO SENDO DROPADOS OU RESPONDIDOS PELA BRIDGE
-
-	
+ 	
 	// Filtra pacotes 
-	if ( ip_ret == 0  ){ // Se pacote do IP do container1
-		if (protocolo == 1){ // Filtra pacotes
-			count = bpf_map_lookup_elem(&pkt_counter, &key);
-			
-			if (count != NULL){
-				(*count)++;
-				bpf_printk("recebe_kern: %d ret:%d\n", *count, ip_ret);
-			}
-
+	if ( ip_ret == 0  ){ // Se pacote do IP do container2
+        if (protocolo == 1){ // Filtra pacotes
+            count = bpf_map_lookup_elem(&pkt_counter, &key);
             altera_ip(ctx);
-		}
 
-        redir = bpf_redirect( ctx->ingress_ifindex, BPF_F_INGRESS );
+            if (count != NULL){
+                (*count)++;
+                //bpf_printk("recebe_kern: %d ret:%d\n", *count, ip_ret);
+            }
+        }
+       // else{
+       //     bpf_printk("recebe_kern: N EH ICMP\n");
+       // }
+        //redir = bpf_redirect( ctx->ingress_ifindex, BPF_F_INGRESS );
 	}
     
 
-	return XDP_TX;
-	//return XDP_PASS;
-	//return redir;
+	//return XDP_TX;
+	return XDP_PASS;
+	// return redir;
 }
 
 char _license[] SEC("license") = "GPL";

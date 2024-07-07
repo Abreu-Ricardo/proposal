@@ -9,16 +9,18 @@ ip netns add n1;
 ip netns add n2; 
 ip netns add n3; 
 
-
 # N1 --> N2
-#sudo ip link add veth1 type veth peer name veth2;
+# 192.168.1.1 --> 192.168.1.2
+#sudo ip link add veth1 type veth peer name veth2; 
 sudo ip link add veth1 netns n1 type veth peer name veth2 netns n2;
 
 # N2 --> N3
+# 192.168.2.3 --> 192.168.2.4
 #sudo ip link add veth3 type veth peer name veth4;
 sudo ip link add veth3 netns n2 type veth peer name veth4 netns n3;
 
 # N3 --> N1
+# 192.168.3.5 --> 192.168.3.6
 #sudo ip link add veth5 type veth peer name veth6;
 sudo ip link add veth5 netns n3 type veth peer name veth6 netns n1;
 
@@ -47,15 +49,15 @@ sudo ip link add veth5 netns n3 type veth peer name veth6 netns n1;
 # Atribuindo IP para cada veth
 # N1
 sudo ip netns exec n1 ip addr add 192.168.1.1/24 dev veth1;
-sudo ip netns exec n1 ip addr add 192.168.1.6/24 dev veth6;
+sudo ip netns exec n1 ip addr add 192.168.3.6/24 dev veth6;
 
 # N2
 sudo ip netns exec n2 ip addr add 192.168.1.2/24 dev veth2;
-sudo ip netns exec n2 ip addr add 192.168.1.3/24 dev veth3;
+sudo ip netns exec n2 ip addr add 192.168.2.3/24 dev veth3;
 
 # N3
-sudo ip netns exec n3 ip addr add 192.168.1.4/24 dev veth4;
-sudo ip netns exec n3 ip addr add 192.168.1.5/24 dev veth5;
+sudo ip netns exec n3 ip addr add 192.168.2.4/24 dev veth4;
+sudo ip netns exec n3 ip addr add 192.168.3.5/24 dev veth5;
 
 
 # Levantando os loopbacks e as veths 

@@ -29,7 +29,7 @@ if [ $3 == 'up' ]; then
 
 	# Carrega o programa com o iproute2 
 	#sudo ip -force link set dev $2 xdp obj ${1%.c}.o sec xdp
-	sudo xdp-loader load $2 ${1%.c}.o -m skb;
+	sudo xdp-loader load $2 ${1%.c}.o; #-m skb;
 
 	# Mostra a lista de programas atual
 	sudo bpftool prog show;
