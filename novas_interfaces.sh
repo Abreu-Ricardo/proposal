@@ -80,6 +80,13 @@ sudo ip netns exec n2 sh -c 'echo 1 > /proc/sys/net/ipv4/ip_forward';
 sudo ip netns exec n3 sh -c 'echo 1 > /proc/sys/net/ipv4/ip_forward'; 
 
 
+sudo ip netns exec n1 sh -c 'echo 0 >  /proc/sys/net/ipv4/conf/veth6/rp_filter'
+sudo ip netns exec n3 sh -c 'echo 0 >  /proc/sys/net/ipv4/conf/veth4/rp_filter'
+sudo ip netns exec n3 sh -c 'echo 0 >  /proc/sys/net/ipv4/conf/veth5/rp_filter'
+
+
+#sudo ip netns exec n3 sh -c 'ethtool -K veth4 gro on' 
+#sudo ip netns exec n3 sh -c 'ethtool -K veth5 gro on' 
 
 echo "N1--> sudo ip netns exec n1 bash";
 echo "N2--> sudo ip netns exec n2 bash";

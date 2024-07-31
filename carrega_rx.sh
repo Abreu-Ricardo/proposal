@@ -22,17 +22,17 @@ if [ $3 == 'up' ]; then
 
 	name=$1;	
 	# Compila codigo .c passado
-	clang -g -O2 -target bpf -c $1;
+	clang -g -O2 -target bpf -c $1
 
 	# Cria sistema de arquivo virtual do bpf
-	sudo mount -t bpf none /sys/fs/bpf/;
+	sudo mount -t bpf none /sys/fs/bpf/
 
 	# Carrega o programa com o iproute2 
 	#sudo ip -force link set dev $2 xdp obj ${1%.c}.o sec xdp
-	sudo xdp-loader load $2 ${1%.c}.o; #-m skb;
+	sudo xdp-loader load $2 ${1%.c}.o #-m skb;
 
 	# Mostra a lista de programas atual
-	sudo bpftool prog show;
+	sudo bpftool prog show
 
 
 	exit 0;
