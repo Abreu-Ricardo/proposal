@@ -174,25 +174,29 @@ static __always_inline void altera_ip(struct __sk_buff *ctx){
             
             if (data + sizeof(struct ethhdr) + sizeof(struct iphdr) + sizeof(struct icmphdr) <= data_end ){ 
                 // MAC da veth5 do Container3
-                // 96:6f:f2:1e:05:79 
-                eth->h_source[0] = 0x96;
-				eth->h_source[1] = 0x6f;
-				eth->h_source[2] = 0xf2;
-				eth->h_source[3] = 0x1e;
-				eth->h_source[4] = 0x05;
-				eth->h_source[5] = 0x79;
-         
+                // 62:5e:d1:02:c1:35 
+                eth->h_dest[0] = 0x62;
+                eth->h_dest[1] = 0x5e;
+                eth->h_dest[2] = 0xd1;
+                eth->h_dest[3] = 0x02;
+                eth->h_dest[4] = 0xc1;
+                eth->h_dest[5] = 0x35;
+
 
                 // MAC DEST veth6 do container1
-                // 1a:81:a0:9e:72:69 
-                eth->h_dest[0] = 0x1a;
-				eth->h_dest[1] = 0x81;
-				eth->h_dest[2] = 0xa0;
-				eth->h_dest[3] = 0x9e;
-				eth->h_dest[4] = 0x72;
-				eth->h_dest[5] = 0x69;
+                // 0e:eb:e4:28:fc:42 
+                eth->h_dest[0] = 0x0e;
+                eth->h_dest[1] = 0xeb;
+                eth->h_dest[2] = 0xe4;
+                eth->h_dest[3] = 0x28;
+                eth->h_dest[4] = 0xfc;
+                eth->h_dest[5] = 0x42;
 
-				iph->saddr = bpf_htonl(IP_C3v5);
+                // Se colocar IP da veth5 o ping aponta (DIFFERENT ADDRESS!), mas funciona
+				//iph->saddr = bpf_htonl(IP_C3v5); 
+                
+                // Com ip destino real, veth2 o ping funciona normal, sem msg nem erros
+				iph->saddr = bpf_htonl(IP_C2v2);
                 iph->daddr = bpf_htonl(IP_C1v6);
 
                 
